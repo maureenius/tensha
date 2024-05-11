@@ -1,0 +1,1 @@
+Garoon APIからスケジュールを取得してGoogleカレンダーに転写(tensha)する
