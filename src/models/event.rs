@@ -67,7 +67,7 @@ impl DateTimeRange {
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct Attendee {
+pub struct Attendee {
     display_name: String,
 }
 
