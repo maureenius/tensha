@@ -4,7 +4,7 @@ use reqwest::Client;
 use reqwest::header::{ACCEPT, HeaderMap};
 use serde::{Deserialize, Serialize};
 
-use crate::apis::garoon::{GaroonClient, GaroonEvent};
+use crate::apis::garoon::{GaroonGetEventsClient, GaroonEvent};
 
 pub struct GaroonAuth {
     pub user_id: String,
@@ -49,12 +49,9 @@ impl GaroonRestClient {
     }
 }
 #[async_trait]
-impl GaroonClient for GaroonRestClient {
-    async fn get_events(&self) -> Result<Vec<GaroonEvent>, reqwest::Error> {
+impl GaroonGetEventsClient for GaroonRestClient {
+    async fn get(&self) -> Result<Vec<GaroonEvent>, reqwest::Error> {
         let url = format!("{}{}", self.base_url, self.get_events_path());
-
-        let tmp_headers = self.headers();
-        let tmp_header_str = format!("{:?}", tmp_headers);
 
         let response = self.client
             .get(&url)
@@ -116,7 +113,7 @@ mod tests {
         let client = GaroonRestClient::new(mock_server.uri(), auth);
 
         // Exercise: GaroonClient#get_eventsを実行する
-        let result = client.get_events().await;
+        let result = client.get().await;
 
         // Asserts
         assert!(result.is_ok(), "Failed to get events: {:?}", result.err().unwrap());
@@ -138,7 +135,7 @@ mod tests {
         let client = GaroonRestClient::new(mock_server.uri(), auth);
 
         // Exercise: GaroonClient#get_eventsを実行する
-        let result = client.get_events().await;
+        let result = client.get().await;
 
         // Asserts
         assert!(result.is_err());

@@ -1,12 +1,12 @@
 use anyhow::Result;
 
-use crate::apis::garoon::GaroonClient;
+use crate::apis::garoon::GaroonGetEventsClient;
 use crate::models::event::Event;
 
-pub struct CalendarSyncService<G: GaroonClient> {
+pub struct CalendarSyncService<G: GaroonGetEventsClient> {
     client: G,
 }
-impl<G> CalendarSyncService<G> where G: GaroonClient + Send + Sync {
+impl<G> CalendarSyncService<G> where G: GaroonGetEventsClient + Send + Sync {
     pub fn new(client: G) -> Self {
         CalendarSyncService { client }
     }
@@ -17,7 +17,7 @@ impl<G> CalendarSyncService<G> where G: GaroonClient + Send + Sync {
     
     pub async fn get_garoon_events(&self) -> Result<Vec<Event>, anyhow::Error> {
         let events = self.client
-            .get_events()
+            .get()
             .await?
             .iter()
             .map(|garoon_event| Event::from(garoon_event.clone()))
@@ -29,15 +29,15 @@ impl<G> CalendarSyncService<G> where G: GaroonClient + Send + Sync {
 
 #[cfg(test)]
 mod tests {
-    use crate::apis::garoon::{GaroonDateTime, GaroonEvent, MockGaroonClient};
+    use crate::apis::garoon::{GaroonDateTime, GaroonEvent, MockGaroonGetEventsClient};
     use crate::models::event::Title;
     use crate::services::calendar_sync_service::CalendarSyncService;
 
     #[tokio::test]
     async fn test_sync_events_正常系() {
         // Setup: GaroonClientのモックを作成し、get_eventsメソッドの戻り値を設定する
-        let mut garoon_client = MockGaroonClient::new();
-        garoon_client.expect_get_events()
+        let mut garoon_client = MockGaroonGetEventsClient::new();
+        garoon_client.expect_get()
             .times(1)
             .return_once(|| Ok(vec![
                 GaroonEvent {
@@ -65,8 +65,8 @@ mod tests {
     #[tokio::test]
     async fn test_get_garoon_events_正常系() {
         // Setup: GaroonClientのモックを作成し、get_eventsメソッドの戻り値を設定する
-        let mut garoon_client = MockGaroonClient::new();
-        garoon_client.expect_get_events()
+        let mut garoon_client = MockGaroonGetEventsClient::new();
+        garoon_client.expect_get()
             .times(1)
             .return_once(|| Ok(vec![
                 GaroonEvent {

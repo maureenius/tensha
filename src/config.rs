@@ -1,6 +1,6 @@
 use std::env;
 use dotenv::dotenv;
-use crate::apis::garoon::GaroonClient;
+use crate::apis::garoon::GaroonGetEventsClient;
 use crate::apis::garoon_rest::{GaroonAuth, GaroonRestClient};
 use crate::services::calendar_sync_service::CalendarSyncService;
 
@@ -16,7 +16,7 @@ pub fn initialize_rest_clients() -> Result<GaroonRestClient, anyhow::Error> {
     Ok(GaroonRestClient::new(base_url, auth))
 }
 
-pub fn initialize_service<G: GaroonClient + Send + Sync>(client: G) -> Result<CalendarSyncService<G>, anyhow::Error> {
+pub fn initialize_service<G: GaroonGetEventsClient + Send + Sync>(client: G) -> Result<CalendarSyncService<G>, anyhow::Error> {
     Ok(CalendarSyncService::<G>::new(client))
 }
 

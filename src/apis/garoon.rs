@@ -5,8 +5,8 @@ use mockall::automock;
 
 #[cfg_attr(test, automock)]
 #[async_trait]
-pub trait GaroonClient {
-    async fn get_events(&self) -> Result<Vec<GaroonEvent>, reqwest::Error>;
+pub trait GaroonGetEventsClient {
+    async fn get(&self) -> Result<Vec<GaroonEvent>, reqwest::Error>;
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
