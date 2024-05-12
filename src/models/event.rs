@@ -1,5 +1,5 @@
-use chrono::{DateTime, TimeZone, Utc};
-use crate::apis::garoon::{GaroonAttendee, GaroonDateTime, GaroonEvent};
+use chrono::{DateTime, Utc};
+use crate::apis::garoon::{GaroonEvent};
 use crate::utils::date_time_range::DateTimeRange;
 
 #[derive(Debug)]
@@ -66,27 +66,34 @@ impl Attendee {
     }
 }
 
-#[test]
-fn test_from_garoon_event() {
-    let garoon_event = GaroonEvent {
-        subject: "会議".to_string(),
-        attendees: vec![
-            GaroonAttendee {
-                name: "user1".to_string()
-            }
-        ],
-        start: GaroonDateTime {
-            dateTime: "2021-01-01T09:00:00+09:00".to_string(),
-            timeZone: "Asia/Tokyo".to_string(),
-        },
-        end: GaroonDateTime {
-            dateTime: "2021-01-01T10:00:00+09:00".to_string(),
-            timeZone: "Asia/Tokyo".to_string(),
-        },
-    };
-    let event = Event::from(garoon_event);
-    assert_eq!(event.title, Title::new("会議".to_string()));
-    assert_eq!(event.attendees[0].display_name, "user1".to_string());
-    assert_eq!(event.duration.start, Utc.with_ymd_and_hms(2021, 1, 1, 0, 0, 0).unwrap());
-    assert_eq!(event.duration.end, Utc.with_ymd_and_hms(2021, 1, 1, 1, 0, 0).unwrap());
+#[cfg(test)]
+mod tests {
+    use chrono::{TimeZone, Utc};
+    use crate::apis::garoon::{GaroonAttendee, GaroonDateTime, GaroonEvent};
+    use crate::models::event::{Event, Title};
+
+    #[test]
+    fn test_from_garoon_event() {
+        let garoon_event = GaroonEvent {
+            subject: "会議".to_string(),
+            attendees: vec![
+                GaroonAttendee {
+                    name: "user1".to_string()
+                }
+            ],
+            start: GaroonDateTime {
+                dateTime: "2021-01-01T09:00:00+09:00".to_string(),
+                timeZone: "Asia/Tokyo".to_string(),
+            },
+            end: GaroonDateTime {
+                dateTime: "2021-01-01T10:00:00+09:00".to_string(),
+                timeZone: "Asia/Tokyo".to_string(),
+            },
+        };
+        let event = Event::from(garoon_event);
+        assert_eq!(event.title, Title::new("会議".to_string()));
+        assert_eq!(event.attendees[0].display_name, "user1".to_string());
+        assert_eq!(event.duration.start, Utc.with_ymd_and_hms(2021, 1, 1, 0, 0, 0).unwrap());
+        assert_eq!(event.duration.end, Utc.with_ymd_and_hms(2021, 1, 1, 1, 0, 0).unwrap());
+    }
 }

@@ -1,8 +1,7 @@
 use std::fs;
 use std::path::Path;
-use chrono::format::Fixed::TimezoneName;
-use chrono::Local;
 
+use chrono::Local;
 use serde::Serialize;
 
 use crate::models::event::Event;
