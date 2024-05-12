@@ -1,4 +1,5 @@
 use crate::config::{initialize_rest_clients, initialize_service};
+use crate::services::export_events_service::export;
 
 mod models;
 mod apis;
@@ -13,8 +14,9 @@ async fn main() -> Result<(), anyhow::Error> {
     let service = initialize_service(garoon_client).unwrap();
 
     let events = service.get_garoon_events().await?;
+    output::print_results(&events);
     
-    output::print_results(events);
+    export(&events, "./events.csv")?;
     
     Ok(())
 }

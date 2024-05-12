@@ -45,11 +45,25 @@ impl Title {
     pub fn new(title: String) -> Self {
         Self(title)
     }
+
+    pub fn as_str(&self) -> String {
+        self.0.clone()
+    }
+}
+impl From<String> for Title {
+    fn from(value: String) -> Self {
+        Title::new(value)
+    }
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub struct Attendee {
     display_name: String,
+}
+impl Attendee {
+    pub fn new(display_name: String) -> Self {
+        Self { display_name }
+    }
 }
 
 #[test]
