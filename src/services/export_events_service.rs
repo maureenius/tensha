@@ -1,5 +1,7 @@
 use std::fs;
 use std::path::Path;
+use chrono::format::Fixed::TimezoneName;
+use chrono::Local;
 
 use serde::Serialize;
 
@@ -28,10 +30,10 @@ fn to_csv(events: &Vec<Event>) -> Result<String, anyhow::Error> {
     for event in events {
         let exported_event = ExportedEvent {
             subject: event.title.as_str(),
-            start_date: event.duration.start.date_naive().to_string(),
-            start_time: event.duration.start.time().to_string(),
-            end_date: event.duration.end.date_naive().to_string(),
-            end_time: event.duration.end.time().to_string(),
+            start_date: event.duration.start.with_timezone(&Local).date_naive().to_string(),
+            start_time: event.duration.start.with_timezone(&Local).time().to_string(),
+            end_date: event.duration.end.with_timezone(&Local).date_naive().to_string(),
+            end_time: event.duration.end.with_timezone(&Local).time().to_string(),
         };
 
         csv.push_str(&format!(
@@ -69,8 +71,8 @@ mod tests {
             Event::new(
                 Title::new("打ち合わせ".to_string()),
                 DateTimeRange::new(
-                    chrono::Utc.with_ymd_and_hms(2021, 1, 2, 0, 0, 0).unwrap(),
-                    chrono::Utc.with_ymd_and_hms(2021, 1, 2, 1, 0, 0).unwrap(),
+                    chrono::Utc.with_ymd_and_hms(2021, 1, 2, 15, 0, 0).unwrap(),
+                    chrono::Utc.with_ymd_and_hms(2021, 1, 2, 16, 0, 0).unwrap(),
                 ),
                 vec![Attendee::new("user2".to_string())],
             ),
@@ -81,8 +83,8 @@ mod tests {
         assert_eq!(
             csv,
             "Subject,Start Date,Start Time,End Date,End Time\n\
-            会議,2021-01-01,00:00:00,2021-01-01,01:00:00\n\
-            打ち合わせ,2021-01-02,00:00:00,2021-01-02,01:00:00\n"
+            会議,2021-01-01,09:00:00,2021-01-01,10:00:00\n\
+            打ち合わせ,2021-01-03,00:00:00,2021-01-03,01:00:00\n"
         );
     }
 }
