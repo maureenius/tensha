@@ -1,7 +1,8 @@
 use anyhow::Result;
 
-use crate::apis::garoon::GaroonGetEventsClient;
+use crate::apis::garoon::{GaroonGetEventsClient, GaroonGetEventsRequest};
 use crate::models::event::Event;
+use crate::utils::date_time_range::DateTimeRange;
 
 pub struct CalendarSyncService<G: GaroonGetEventsClient> {
     client: G,
@@ -17,13 +18,20 @@ impl<G> CalendarSyncService<G> where G: GaroonGetEventsClient + Send + Sync {
     
     pub async fn get_garoon_events(&self) -> Result<Vec<Event>, anyhow::Error> {
         let events = self.client
-            .get()
+            .get(GaroonGetEventsRequest { period: self.fetch_range() })
             .await?
             .iter()
             .map(|garoon_event| Event::from(garoon_event.clone()))
             .collect();
         
         Ok(events)
+    }
+    
+    fn fetch_range(&self) -> DateTimeRange {
+        DateTimeRange::new(
+            chrono::Utc::now(),
+            chrono::Utc::now() + chrono::Duration::weeks(1),
+        )
     }
 }
 
@@ -39,7 +47,7 @@ mod tests {
         let mut garoon_client = MockGaroonGetEventsClient::new();
         garoon_client.expect_get()
             .times(1)
-            .return_once(|| Ok(vec![
+            .return_once(|_| Ok(vec![
                 GaroonEvent {
                     subject: "会議".to_string(),
                     attendees: vec![],
@@ -68,7 +76,7 @@ mod tests {
         let mut garoon_client = MockGaroonGetEventsClient::new();
         garoon_client.expect_get()
             .times(1)
-            .return_once(|| Ok(vec![
+            .return_once(|_| Ok(vec![
                 GaroonEvent {
                     subject: "会議".to_string(),
                     attendees: vec![],

@@ -2,11 +2,17 @@ use async_trait::async_trait;
 use serde::{Deserialize, Serialize};
 #[cfg(test)]
 use mockall::automock;
+use crate::utils::date_time_range::DateTimeRange;
 
 #[cfg_attr(test, automock)]
 #[async_trait]
 pub trait GaroonGetEventsClient {
-    async fn get(&self) -> Result<Vec<GaroonEvent>, reqwest::Error>;
+    async fn get(&self, request: GaroonGetEventsRequest) -> Result<Vec<GaroonEvent>, reqwest::Error>;
+}
+
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct GaroonGetEventsRequest {
+    pub(crate) period: DateTimeRange,
 }
 
 #[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]

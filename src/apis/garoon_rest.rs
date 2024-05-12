@@ -1,10 +1,11 @@
 use async_trait::async_trait;
 use base64::prelude::*;
+use chrono::SecondsFormat;
 use reqwest::Client;
 use reqwest::header::{ACCEPT, HeaderMap};
 use serde::{Deserialize, Serialize};
 
-use crate::apis::garoon::{GaroonGetEventsClient, GaroonEvent};
+use crate::apis::garoon::{GaroonGetEventsClient, GaroonEvent, GaroonGetEventsRequest};
 
 pub struct GaroonAuth {
     pub user_id: String,
@@ -47,15 +48,23 @@ impl GaroonRestClient {
 
         headers
     }
+
+    fn range_query(&self, request: GaroonGetEventsRequest) -> Vec<(&str, String)> {
+        vec![
+            ("rangeStart", request.period.start.to_rfc3339_opts(SecondsFormat::Secs, true)),
+            ("rangeEnd", request.period.end.to_rfc3339_opts(SecondsFormat::Secs, true)),
+        ]
+    }
 }
 #[async_trait]
 impl GaroonGetEventsClient for GaroonRestClient {
-    async fn get(&self) -> Result<Vec<GaroonEvent>, reqwest::Error> {
+    async fn get(&self, request: GaroonGetEventsRequest) -> Result<Vec<GaroonEvent>, reqwest::Error> {
         let url = format!("{}{}", self.base_url, self.get_events_path());
-
+        
         let response = self.client
             .get(&url)
             .headers(self.headers())
+            .query(&self.range_query(request))
             .send()
             .await?
             .error_for_status()?
@@ -68,12 +77,14 @@ impl GaroonGetEventsClient for GaroonRestClient {
 
 #[cfg(test)]
 mod tests {
+    use chrono::TimeZone;
     use reqwest::StatusCode;
     use wiremock::{Mock, MockServer, ResponseTemplate};
-    use wiremock::matchers::{header, method, path};
+    use wiremock::matchers::{header, method, path, query_param};
 
     use crate::apis::garoon::*;
     use crate::apis::garoon_rest::*;
+    use crate::utils::date_time_range::DateTimeRange;
 
     #[tokio::test]
     async fn get_events_正常系() {
@@ -96,11 +107,15 @@ mod tests {
                 },
             }],
         };
+        let start_date = "2024-05-10T00:00:00Z";
+        let end_date = "2024-05-11T00:00:00Z";
 
         let response = ResponseTemplate::new(200).set_body_json(&garoon_response);
         
         Mock::given(method("GET"))
             .and(path("/api/v1/schedule/events"))
+            .and(query_param("rangeStart", start_date))
+            .and(query_param("rangeEnd", end_date))
             .and(header("X-Cybozu-Authorization", expected_auth))
             .respond_with(response)
             .mount(&mock_server)
@@ -113,7 +128,10 @@ mod tests {
         let client = GaroonRestClient::new(mock_server.uri(), auth);
 
         // Exercise: GaroonClient#get_eventsを実行する
-        let result = client.get().await;
+        let result = client.get(GaroonGetEventsRequest { period: DateTimeRange::new(
+            chrono::Utc.with_ymd_and_hms(2024, 5, 10, 0, 0, 0).unwrap(),
+            chrono::Utc.with_ymd_and_hms(2024, 5, 11, 0, 0, 0).unwrap(),
+        ) }).await;
 
         // Asserts
         assert!(result.is_ok(), "Failed to get events: {:?}", result.err().unwrap());
@@ -135,7 +153,10 @@ mod tests {
         let client = GaroonRestClient::new(mock_server.uri(), auth);
 
         // Exercise: GaroonClient#get_eventsを実行する
-        let result = client.get().await;
+        let result = client.get(GaroonGetEventsRequest { period: DateTimeRange::new(
+            chrono::Utc.with_ymd_and_hms(2024, 5, 10, 0, 0, 0).unwrap(),
+            chrono::Utc.with_ymd_and_hms(2024, 5, 11, 0, 0, 0).unwrap(),
+        ) }).await;
 
         // Asserts
         assert!(result.is_err());

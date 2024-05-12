@@ -5,6 +5,7 @@ mod apis;
 mod services;
 mod config;
 mod output;
+mod utils;
 
 #[tokio::main]
 async fn main() -> Result<(), anyhow::Error> {
